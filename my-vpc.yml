@@ -1,0 +1,132 @@
+
+AWSTemplateFormatVersion: "2010-09-09"  
+Description: >- 
+  A VPC sample template. It doesn't matter the order fo the sections but it can be 
+  helpful to use a logical order.
+# Metadada:
+#   # Objects that provide additional information about the template
+Parameters:
+  # Values to pass to your template at runtime, when creating or updating a stack
+  # You can refer to parameters from the Resources and Outputs sections of the template.
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x
+#   Rules:
+#   # Validates a parameter or a combination of parameters passed to a template, 
+#   # when creating or updating a stack
+# Mappings:
+#   # A mapping of keys and associated values. You can match a key to a corresponding value
+#   # by using the Fn::FindInMap intrinsic function in the Resources and Outputs sections
+# Conditions:
+#   # it controls whether certain resources are created or whether certain resource 
+#   # properties are assigned a value during stack creation or update
+# Transform:
+  # For serverless applications, also referred to as Lambda-based applications
+Resources:
+  # ONLy required, at least one
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.28.10.0/24
+      Tags:
+      - Key: Name
+        Value: MyVPC
+  mySubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: myVPC
+      CidrBlock: 172.28.10.0/26
+      AvailabilityZone: "ap-southeast-2a"
+      Tags:
+      - Key: Name
+        Value: my-sn-a        
+  mySubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: myVPC
+      CidrBlock: 172.28.10.64/26
+      AvailabilityZone: "ap-southeast-2b"
+      Tags:
+      - Key: Name
+        Value: my-sn-b
+  myRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn: myVPC
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+      - Key: Name
+        Value: my-rtb
+  myInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: MyIGW
+  myVPCigwAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC
+      InternetGatewayId: !Ref myInternetGateway
+  myRoute:
+    Type: AWS::EC2::Route
+    DependsOn: myInternetGateway
+    Properties:
+       RouteTableId:
+         Ref: myRouteTable
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId:
+         Ref: myInternetGateway
+  mySubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: mySubnetA
+      RouteTableId:
+        Ref: myRouteTable
+  mySubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: mySubnetB
+      RouteTableId:
+        Ref: myRouteTable        
+  mySG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH access from my ip
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHLocation
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHLocation
+      Tags:
+        - Key: Name
+          Value: mySG
+Outputs:
+  # Describes the values that are returned whenever you view your stack's properties
+  VPCId:
+    Description: VPC ID
+    Value: !Ref myVPC
+  SubnetIdA:
+    Value: !Ref mySubnetA
+  SubnetIdB:
+    Value: !Ref mySubnetB
+  RouteTableId:
+    Value: !Ref myRouteTable
+  SecurityGroupId:
+    Value: !Ref mySG
+
