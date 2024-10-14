@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  hellosam
+
+  Sample SAM Template for hellosam
+  
+Parameters:
+  TestParameter:
+    Description: To test parameters 
+    Type: String
+    Default: "Test"
+
+Resources:
+  TestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TestParameter: !Ref TestParameter
+      CodeUri: hello-world/
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      MemorySize: 3008
+      Timeout: 30
