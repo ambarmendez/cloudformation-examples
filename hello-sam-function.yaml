@@ -21,14 +21,14 @@ Resources:
       Handler: index.main
       Runtime: python3.9
       InlineCode: |
-        import json
+        # import json
         def main(event, context):
-            #return {"statusCode": 200, "body": "Hello from Lambda!"}
-            return {
-                "statusCode": 200,
-                "body": json.dumps({
-                    "message": "hello world",
-                }),
-            }
+            return {"statusCode": 200, "body": "Hello from Lambda!"}
+            # return {
+            #     "statusCode": 200,
+            #     "body": json.dumps({
+            #         "message": "hello world",
+            #     }),
+            # }
       MemorySize: 3008
       Timeout: 30
